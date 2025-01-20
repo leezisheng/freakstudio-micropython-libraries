@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: serial_servo
+Version: 1.0.0
+Summary: A MicroPython library to control servo motors via UART
+Home-page: https://github.com/leezisheng/freakstudio-micropython-libraries
+Author: leeqingshui
+Author-email: 1069653183@qq.com
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: License :: Other/Proprietary License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.12
+License-File: LICENSE
+Provides-Extra: micropython
+Requires-Dist: machine; extra == "micropython"
+Requires-Dist: time; extra == "micropython"

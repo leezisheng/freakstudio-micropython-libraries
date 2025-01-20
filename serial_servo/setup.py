@@ -14,7 +14,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",     # 支持 Python 3
         "Programming Language :: Python :: 3.8",   # 支持 Python 3.8
-        "License :: CC BY-NC 4.0",                 # 使用 CC BY-NC 4.0 许可证
+        "License :: Other/Proprietary License",    # 使用 CC BY-NC 4.0 许可证
         "Operating System :: OS Independent",      # 操作系统无关
     ],
     # Python版本要求（适应MicroPython，v1.23.0版本支持的Python版本）
