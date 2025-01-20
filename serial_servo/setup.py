@@ -1,13 +1,19 @@
 from setuptools import setup, find_packages
 
+# 读取 README 文件内容
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name="serial_servo",
-    version="1.0.0",
+    version="1.0.3",
     description="A MicroPython library to control servo motors via UART",
     author="leeqingshui",
     author_email="1069653183@qq.com",
     url="https://github.com/leezisheng/freakstudio-micropython-libraries",
     packages=find_packages(),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     install_requires=[
         # 仅使用MicroPython内置模块
     ],

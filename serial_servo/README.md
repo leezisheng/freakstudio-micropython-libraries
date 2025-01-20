@@ -108,6 +108,16 @@ SerialServo 类的设计通过封装舵机控制指令和数据包的构建逻�
 ### 安装依赖
 在运行示例程序之前，确保你的环境中安装了`machine`和`time`等模块。你可以通过MicroPython的包管理器安装依赖。
 
+您可以使用如下语句和 `mpremote` 工具安装该库：
+```bash
+mpremote mip install https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo
+```
+或者：
+```bash
+mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+```
+如果通过 `mpremote` 安装失败，您可以选择手动安装库，即选择 Download ZIP，然后解压文件。
+
 1. 将该程序文件保存为 `serial_servo.py`。
 2. 确保使用的主控板通过舵机驱动扩展板已连接好舵机和串口，接线供电无异常。
 3. 在MicroPython环境中，通过`import serial_servo`导入该模块。
@@ -148,6 +158,9 @@ print(f"Servo ID: 1, Angle: {angle}, Time: {time}")
 ## 许可协议
 
 本项目采用 **[知识共享署名-非商业性使用 4.0 国际版 (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)** 许可协议。
+
+## 版本记录
+* v1.0.0到v1.0.3版本：初始化该库，对说明文件进行小修改。
 
 # Serial-Servo-Library-MicroPython-Version-FreakStudio
 
@@ -245,6 +258,16 @@ The `SerialServo` class simplifies servo communication by encapsulating the cont
 ### Install Dependencies
 Before running the example program, make sure your environment has the necessary modules like `machine` and `time`. You can install dependencies via the MicroPython package manager.
 
+You can install the library using the following command with the `mpremote` tool:
+```bash
+mpremote mip install https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo
+```
+Or:
+```bash
+mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+```
+If the installation fails using `mpremote`, you can choose to install the library manually by selecting Download ZIP and then extracting the files.
+
 1. Save the program file as `serial_servo.py`.
 2. Ensure that your main controller board is properly connected to the servo driver expansion board, with the servo and serial connections correctly wired and powered.
 3. In the MicroPython environment, import the module via `import serial_servo`.
@@ -284,3 +307,7 @@ This program supports various servo control modes and provides powerful servo st
 ## License
 
 This project is licensed under the **[Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)**.
+
+## Changelog
+
+* v1.0.0 to v1.0.3: Initialized the library and made minor modifications to the documentation files.
