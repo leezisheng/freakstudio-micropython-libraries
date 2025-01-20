@@ -6,7 +6,7 @@ setup(
     description="A MicroPython library to control servo motors via UART",
     author="leeqingshui",
     author_email="1069653183@qq.com",
-    url="",
+    url="https://github.com/leezisheng/freakstudio-micropython-libraries",
     packages=find_packages(),
     install_requires=[
         # 仅使用MicroPython内置模块

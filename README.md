@@ -18,6 +18,7 @@ Freak嵌入式工作室位以嵌入式电子套件及相关教程、成品电子
 ## 开源仓库介绍
 
 ### serial-servo
+[**serial_servo**](https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo)
 该模块展示了如何使用MicroPython控制串口舵机扩展板（FreakStudio-多米诺系列扩展板），通过串口通信，用户可以控制多个舵机的角度、速度等参数，实现高效、灵活的舵机控制。
 程序中使用了串口通讯与舵机进行数据交互，提供了完整的控制命令和反馈解析功能。
 
