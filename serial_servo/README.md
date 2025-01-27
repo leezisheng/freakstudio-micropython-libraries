@@ -27,7 +27,7 @@
 #### `SerialServo` 类
 
 该类封装了舵机控制相关的所有功能，包括生成和发送控制指令、接收舵机反馈、读取舵机状态等。
-![UART_SERVO_Class](./image/UART_SERVO_Class.png)
+![UART_SERVO_Class](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/UART_SERVO_Class.png)
 
 - `__init__(self, uart: UART) -> None`：初始化串口舵机控制类。
 - `calculate_checksum(data: list[int]) -> int`：计算校验和，确保数据的完整性和正确性。
@@ -83,12 +83,12 @@
   * **参数**：控制指令的参数
   * **校验和**：用于校验数据包的完整性
 
-![build_packet](./image/build_packet.png)
+![build_packet](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/build_packet.png)
 
 * **发送指令方法 `send_command`**：该方法构建指令包并通过 `UART` 发送给舵机，它调用了` build_packet() `来构造数据包，
   并通过` self.uart.write() `发送数据。
 
-![send_command](./image/send_command.png)
+![send_command](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/send_command.png)
 
 * **接收指令方法 `receive_command`**：`receive_command() `方法用于接收来自舵机的反馈数据，此方法的工作过程如下：
   1. **命令验证**：确认接收到的是读取命令，而不是其他类型的命令。
@@ -97,7 +97,7 @@
   4. **数据解析**：根据返回的数据长度，解析并返回舵机的状态或数据（例如电压、角度等）。
   5. 如果数据包无效（如校验和错误、数据长度不符等），该方法将返回空列表。
 
-![receive_command](./image/receive_command.png)
+![receive_command](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/receive_command.png)
 
 SerialServo 类的设计通过封装舵机控制指令和数据包的构建逻辑，简化了舵机通信过程，核心思路是通过统一的数据包格式和校验机制确保指令的正确传输，
 结合 UART 通信接口实现与舵机的高效交互。类内指令常量和参数处理使得操作更加清晰易懂，
@@ -112,10 +112,35 @@ SerialServo 类的设计通过封装舵机控制指令和数据包的构建逻�
 ```bash
 mpremote mip install https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo
 ```
-或者：
+或者（**推荐**）：
 ```bash
 mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
 ```
+安装进行中会显示：
+```bash
+(base) PS D:\lee\windows terminal\terminal-1.17.11461.0> mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+Install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+Installing github:leezisheng/freakstudio-micropython-libraries/serial_servo/package.json to /lib
+Installing: /lib/serial_servo/__init__.py
+Installing: /lib/serial_servo/serial_servo.py
+Installing micropython-machine (latest) from https://micropython.org/pi/v2 to /lib
+Package may be partially installed
+mpremote: Package not found: https://micropython.org/pi/v2/package/6/micropython-machine/latest.json
+```
+
+安装完成后，通过mpremote工具，连接你的开发板，如果成功安装，会显示如下信息：
+```bash
+(base) PS D:\lee\windows terminal\terminal-1.17.11461.0> mpremote connect COM8
+Connected to MicroPython at COM8
+Use Ctrl-] or Ctrl-x to exit this shell
+
+>>> import os
+>>> os.listdir()
+['lib']
+>>> from serial_servo import SerialServo
+>>>
+```
+
 如果通过 `mpremote` 安装失败，您可以选择手动安装库，即选择 Download ZIP，然后解压文件。
 
 1. 将该程序文件保存为 `serial_servo.py`。
@@ -153,14 +178,14 @@ print(f"Servo ID: 1, Angle: {angle}, Time: {time}")
 
 ## 联系开发者
 - 如有任何问题或需要帮助，请通过 [10696531183@qq.com](mailto:10696531183@qq.com) 联系开发者。
-  ![FreakStudio_Contact](../image/FreakStudio_Contact.png)
+![FreakStudio_Contact](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/image/FreakStudio_Contact.png)
 
 ## 许可协议
 
 本项目采用 **[知识共享署名-非商业性使用 4.0 国际版 (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)** 许可协议。
 
 ## 版本记录
-* v1.0.0到v1.0.4版本：初始化该库，对说明文件进行小修改。
+* v1.0.0到v1.0.5版本：初始化该库，对说明文件进行小修改。
 
 # Serial-Servo-Library-MicroPython-Version-FreakStudio
 
@@ -186,7 +211,8 @@ The software must run on the provided serial servo expansion board (designed by 
 #### `SerialServo` Class
 
 This class encapsulates all servo control functions, including generating and sending control commands, receiving feedback from the servo, and reading servo status.
-![UART_SERVO_Class](./image/UART_SERVO_Class.png)
+![UART_SERVO_Class](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/UART_SERVO_Class.png)
+
 
 - `__init__(self, uart: UART) -> None`: Initializes the serial servo control class.
 - `calculate_checksum(data: list[int]) -> int`: Calculates the checksum to ensure data integrity and correctness.
@@ -238,10 +264,12 @@ The class's core methods include:
   * **Command Number**: The specific control command
   * **Parameters**: The control command's parameters
   * **Checksum**: Used to verify the integrity of the data packet
-    ![build_packet](./image/build_packet.png)
+
+![build_packet](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/build_packet.png)
 
 * **Send Command Method `send_command`**: This method constructs the command packet and sends it to the servo via `UART`. It calls `build_packet()` to create the data packet and sends the data through `self.uart.write()`.
-  ![send_command](./image/send_command.png)
+  
+![send_command](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/send_command.png)
 
 * **Receive Command Method `receive_command`**: The `receive_command()` method is used to receive feedback data from the servo. The process includes:
   1. **Command Validation**: Ensures the received command is a read command.
@@ -249,7 +277,8 @@ The class's core methods include:
   3. **Checksum Validation**: Verifies the checksum to ensure the data hasn't been tampered with.
   4. **Data Parsing**: Parses and returns the servo's status or data (e.g., voltage, angle).
   5. If the data packet is invalid (e.g., checksum error, data length mismatch), the method returns an empty list.
-     ![receive_command](./image/receive_command.png)
+
+![receive_command](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/serial_servo/image/receive_command.png)
 
 The `SerialServo` class simplifies servo communication by encapsulating the control commands and packet-building logic. The core idea is to use a unified packet format and checksum mechanism to ensure the correct transmission of commands and efficient interaction with the servos via the UART interface. The class's command constants and parameter handling make operations clear and easy to follow, while checksum and data length validation ensure data integrity and reliability.
 
@@ -262,10 +291,35 @@ You can install the library using the following command with the `mpremote` tool
 ```bash
 mpremote mip install https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo
 ```
-Or:
+Or(**Recommended**):
 ```bash
 mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
 ```
+During installation, you will see the following output:
+```bash
+(base) PS D:\lee\windows terminal\terminal-1.17.11461.0> mpremote mip install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+Install github:leezisheng/freakstudio-micropython-libraries/serial_servo
+Installing github:leezisheng/freakstudio-micropython-libraries/serial_servo/package.json to /lib
+Installing: /lib/serial_servo/__init__.py
+Installing: /lib/serial_servo/serial_servo.py
+Installing micropython-machine (latest) from https://micropython.org/pi/v2 to /lib
+Package may be partially installed
+mpremote: Package not found: https://micropython.org/pi/v2/package/6/micropython-machine/latest.json
+```
+After installation is complete:
+Connect your development board via the mpremote tool, and if the installation is successful, you should see the following output:
+```bash
+(base) PS D:\lee\windows terminal\terminal-1.17.11461.0> mpremote connect COM8
+Connected to MicroPython at COM8
+Use Ctrl-] or Ctrl-x to exit this shell
+
+>>> import os
+>>> os.listdir()
+['lib']
+>>> from serial_servo import SerialServo
+>>>
+```
+
 If the installation fails using `mpremote`, you can choose to install the library manually by selecting Download ZIP and then extracting the files.
 
 1. Save the program file as `serial_servo.py`.
@@ -302,7 +356,9 @@ This program supports various servo control modes and provides powerful servo st
 
 ## Contact the Developer
 - For any inquiries or assistance, feel free to contact the developer at [10696531183@qq.com](mailto:10696531183@qq.com).
-  ![FreakStudio_Contact](../image/FreakStudio_Contact.png)
+
+![FreakStudio_Contact](https://github.com/leezisheng/freakstudio-micropython-libraries/raw/main/image/FreakStudio_Contact.png)
+
 
 ## License
 
@@ -310,4 +366,4 @@ This project is licensed under the **[Creative Commons Attribution-NonCommercial
 
 ## Changelog
 
-* v1.0.0 to v1.0.4: Initialized the library and made minor modifications to the documentation files.
+* v1.0.0 to v1.0.5: Initialized the library and made minor modifications to the documentation files.

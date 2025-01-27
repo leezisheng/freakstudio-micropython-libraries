@@ -1,6 +1,6 @@
 {
   "name": "serial_servo",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A MicroPython library to control servo motors via UART",
   "author": "leeqingshui",
   "author_email": "1069653183@qq.com",
@@ -13,7 +13,7 @@
     ["micropython-machine", "latest"],
     ["micropython-time", "latest"]
   ],
-  "version": "1.0.3",
+  "version": "1.0.5",
   "long_description": "A MicroPython library to control servo motors via UART",
   "long_description_content_type": "text/markdown",
   "classifiers": [
