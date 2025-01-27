@@ -10,7 +10,7 @@
     },
     "install": {
       "files": [
-        "serial_servo/*.py"
+        "serial_servo/serial_servo/*.py"
       ]
     },
     "long_description": "A MicroPython library to control servo motors via UART",
