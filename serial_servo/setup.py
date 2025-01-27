@@ -11,7 +11,7 @@ setup(
     author="leeqingshui",
     author_email="1069653183@qq.com",
     url="https://github.com/leezisheng/freakstudio-micropython-libraries",
-    packages=find_packages(),
+    packages=find_packages(where="serial_servo"),
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
