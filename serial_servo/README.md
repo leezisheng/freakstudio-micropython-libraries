@@ -160,7 +160,7 @@ print(f"Servo ID: 1, Angle: {angle}, Time: {time}")
 本项目采用 **[知识共享署名-非商业性使用 4.0 国际版 (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/)** 许可协议。
 
 ## 版本记录
-* v1.0.0到v1.0.3版本：初始化该库，对说明文件进行小修改。
+* v1.0.0到v1.0.4版本：初始化该库，对说明文件进行小修改。
 
 # Serial-Servo-Library-MicroPython-Version-FreakStudio
 
@@ -310,4 +310,4 @@ This project is licensed under the **[Creative Commons Attribution-NonCommercial
 
 ## Changelog
 
-* v1.0.0 to v1.0.3: Initialized the library and made minor modifications to the documentation files.
+* v1.0.0 to v1.0.4: Initialized the library and made minor modifications to the documentation files.

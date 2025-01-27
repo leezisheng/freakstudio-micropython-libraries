@@ -5,14 +5,15 @@
   "author": "leeqingshui",
   "author_email": "1069653183@qq.com",
   "url": "https://github.com/leezisheng/freakstudio-micropython-libraries",
-  "dependencies": {
-    "micropython": ["machine", "time"]
-  },
-  "install": {
-    "files": [
-      "serial_servo/serial_servo/*.py"
-    ]
-  },
+  "urls": [
+    ["serial_servo/__init__.py", "github:leezisheng/freakstudio-micropython-libraries/serial_servo/serial_servo/__init__.py"],
+    ["serial_servo/serial_servo.py", "github:leezisheng/freakstudio-micropython-libraries/serial_servo/serial_servo/serial_servo.py"]
+  ],
+  "deps": [
+    ["micropython-machine", "latest"],
+    ["micropython-time", "latest"]
+  ],
+  "version": "1.0.3",
   "long_description": "A MicroPython library to control servo motors via UART",
   "long_description_content_type": "text/markdown",
   "classifiers": [
