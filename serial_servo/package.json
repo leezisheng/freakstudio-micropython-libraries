@@ -1,29 +1,28 @@
 {
-    "name": "serial_servo",
-    "version": "1.0.3",
-    "description": "A MicroPython library to control servo motors via UART",
-    "author": "leeqingshui",
-    "author_email": "1069653183@qq.com",
-    "url": "https://github.com/leezisheng/freakstudio-micropython-libraries",
-    "dependencies": {
-      "micropython": ["machine", "time"]
-    },
-    "install": {
-      "files": [
-        "serial_servo/serial_servo/*.py"
-      ]
-    },
-    "long_description": "A MicroPython library to control servo motors via UART",
-    "long_description_content_type": "text/markdown",
-    "classifiers": [
-      "Programming Language :: Python :: 3",
-      "Programming Language :: Python :: 3.8",
-      "License :: Other/Proprietary License",
-      "Operating System :: OS Independent"
-    ],
-    "python_requires": ">=3.12",
-    "extras_require": {
-      "micropython": ["machine", "time"]
-    }
+  "name": "serial_servo",
+  "version": "1.0.3",
+  "description": "A MicroPython library to control servo motors via UART",
+  "author": "leeqingshui",
+  "author_email": "1069653183@qq.com",
+  "url": "https://github.com/leezisheng/freakstudio-micropython-libraries",
+  "dependencies": {
+    "micropython": ["machine", "time"]
+  },
+  "install": {
+    "files": [
+      "serial_servo/serial_servo/*.py"
+    ]
+  },
+  "long_description": "A MicroPython library to control servo motors via UART",
+  "long_description_content_type": "text/markdown",
+  "classifiers": [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent"
+  ],
+  "python_requires": ">=3.12",
+  "extras_require": {
+    "micropython": ["machine", "time"]
   }
-  
+}
