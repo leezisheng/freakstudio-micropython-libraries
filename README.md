@@ -48,6 +48,7 @@ For more information, visit my personal homepage:
 ## Open Source Repository Introduction
 
 ### serial-servo
+[**serial_servo**](https://github.com/leezisheng/freakstudio-micropython-libraries/tree/main/serial_servo)
 This module demonstrates how to control a serial servo expansion board (FreakStudio - Domino series expansion board) using MicroPython. Through serial communication, users can control parameters such as the angle and speed of multiple servos, achieving efficient and flexible servo control.  
 The program uses serial communication to interact with the servos and provides complete control commands and feedback parsing functionality.
 
