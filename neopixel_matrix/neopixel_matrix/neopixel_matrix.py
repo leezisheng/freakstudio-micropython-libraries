@@ -16,6 +16,8 @@ import neopixel
 # 导入MicroPython相关模块
 import micropython
 from micropython import const
+# 导入json模块
+import json
 
 # ======================================== 全局变量 ============================================
 
@@ -50,27 +52,20 @@ class NeopixelMatrix(framebuf.FrameBuffer):
     # 缓存颜色转换结果，加速重复色值的处理
     COLOR_CACHE = {}
 
-    # 初始化常用颜色缓存（使用默认亮度 0.2）
-    _COMMON_COLORS = [
-        COLOR_BLACK,
-        COLOR_WHITE,
-        COLOR_RED,
-        COLOR_GREEN,
-        COLOR_BLUE,
-        COLOR_YELLOW,
-        COLOR_CYAN,
-        COLOR_MAGENTA
-    ]
-
-    for c in _COMMON_COLORS:
-        r = (c >> 11) & 0x1F
-        g = (c >> 5) & 0x3F
-        b = c & 0x1F
-        r8 = int((r << 3) * 0.2)
-        g8 = int((g << 2) * 0.2)
-        b8 = int((b << 3) * 0.2)
-        # BGR 顺序
-        COLOR_CACHE[c] = (g8, b8, r8)
+    # 图片JSON格式规范:
+    # {
+    #     "pixels": [    # 必需 - RGB565像素数组，每个值范围0-65535
+    #         0xF800,    # 红色 (R=31, G=0, B=0)
+    #         0x07E0,    # 绿色 (R=0, G=63, B=0)
+    #         0x001F     # 蓝色 (R=0, G=0, B=31)
+    #     ],
+    #     "width": 128,   # 可选 - 图片宽度(像素)，默认使用显示器宽度
+    #                     # 注: len(pixels)必须能被width整除
+    #     # 以下为可选元数据(不影响渲染):
+    #     "height": 64,   # 自动计算: len(pixels)/width
+    #     "description": "示例图片",
+    #     "version": 1.0
+    # }
 
     def __init__(self, width, height, pin, layout=LAYOUT_ROW, brightness=0.2, order=ORDER_BRG,
                  flip_h=False, flip_v=False, rotate=0):
@@ -109,8 +104,6 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         # 创建用于 framebuf 的 RGB565 缓冲区（2 字节一个像素）
         self.buffer = memoryview(bytearray(width * height * 2))
 
-        # 保存亮度缩放比例
-        self.brightness = brightness
         # 保存颜色转换顺序
         self.order = order
         self.flip_h = flip_h
@@ -119,6 +112,41 @@ class NeopixelMatrix(framebuf.FrameBuffer):
 
         # 初始化 framebuf.FrameBuffer，使用 RGB565 模式
         super().__init__(self.buffer, width, height, framebuf.RGB565)
+
+        # 初始化亮度并缓存常用颜色
+        self._brightness = brightness
+        self._init_color_cache()
+
+    def _init_color_cache(self):
+        """根据当前亮度初始化常用颜色缓存"""
+        NeopixelMatrix.COLOR_CACHE.clear()
+        common_colors = [
+            NeopixelMatrix.COLOR_BLACK,
+            NeopixelMatrix.COLOR_WHITE,
+            NeopixelMatrix.COLOR_RED,
+            NeopixelMatrix.COLOR_GREEN,
+            NeopixelMatrix.COLOR_BLUE,
+            NeopixelMatrix.COLOR_YELLOW,
+            NeopixelMatrix.COLOR_CYAN,
+            NeopixelMatrix.COLOR_MAGENTA
+        ]
+        for color in common_colors:
+            # 计算并缓存
+            self.rgb565_to_rgb888(color)
+
+    @property
+    def brightness(self):
+        """获取当前亮度"""
+        return self._brightness
+
+    @brightness.setter
+    def brightness(self, value):
+        """设置亮度，并清空缓存"""
+        if not 0 <= value <= 1:
+            raise ValueError("Brightness must be between 0 and 1")
+        self._brightness = value
+        # 清空并重新初始化缓存
+        self._init_color_cache()
 
     @micropython.native
     def _pos2index(self, x, y):
@@ -147,47 +175,55 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             return y * self.width + (x if y % 2 == 0 else self.width - 1 - x)
 
     @micropython.native
-    @staticmethod
-    def rgb565_to_rgb888(val, brightness=0.2, order='GRB'):
+    def rgb565_to_rgb888(self, val, brightness=None, order=None):
         """
-        将 RGB565 格式的颜色值转换为 RGB888（三元组），适配 WS2812。
-        实际上转换后为 BGR 顺序。
+        将 RGB565 颜色转换为 RGB888（三元组），适配 WS2812。
         使用缓存加速重复转换。
         """
-        # 判断设定颜色值是否在缓存中
-        if val not in NeopixelMatrix.COLOR_CACHE:
-            # RGB565 格式：5 位红色 + 6 位绿色 + 5 位蓝色
-            # 进行格式转换并应用亮度缩放
-            # 提取红色部分（5位）
-            r = (val >> 11) & 0x1F
-            # 提取绿色部分（6位）
-            g = (val >> 5) & 0x3F
-            # 提取蓝色部分（5位）
-            b = val & 0x1F
+        if brightness is None:
+            brightness = self._brightness
 
-            # 计算亮度缩放
-            r8 = int((r << 3) * brightness)
-            g8 = int((g << 2) * brightness)
-            b8 = int((b << 3) * brightness)
+        if order is None:
+            order = self.order
 
-            # 转换为 8 位颜色（缩放），并写入缓存
-            # 根据顺序组合
-            if order == NeopixelMatrix.ORDER_RGB:
-                return (r8, g8, b8)
-            elif order == NeopixelMatrix.ORDER_GRB:
-                return (g8, r8, b8)
-            elif order == NeopixelMatrix.ORDER_BGR:
-                return (b8, g8, r8)
-            elif order == NeopixelMatrix.ORDER_BRG:
-                return (b8, r8, g8)
-            elif order == NeopixelMatrix.ORDER_RBG:
-                return (r8, b8, g8)
-            elif order == NeopixelMatrix.ORDER_GBR:
-                return (g8, b8, r8)
-            else:
-                raise ValueError('Invalid order: {}'.format(order))
+        if not 0 <= brightness <= 1:
+            raise ValueError("Brightness must be between 0 and 1")
 
-        return NeopixelMatrix.COLOR_CACHE[val]
+        # 检查缓存
+        cache_key = (val, brightness, order)
+        if cache_key in NeopixelMatrix.COLOR_CACHE:
+            return NeopixelMatrix.COLOR_CACHE[cache_key]
+
+        # 提取 RGB565 颜色分量
+        r = (val >> 11) & 0x1F
+        g = (val >> 5) & 0x3F
+        b = val & 0x1F
+
+        # 转换为 8bit 并应用亮度
+        r8 = int(((r * 527 + 23) >> 6) * brightness)
+        g8 = int(((g * 259 + 33) >> 6) * brightness)
+        b8 = int(((b * 527 + 23) >> 6) * brightness)
+
+        # 根据顺序组合
+        if order == NeopixelMatrix.ORDER_RGB:
+            rgb = (r8, g8, b8)
+        elif order == NeopixelMatrix.ORDER_GRB:
+            rgb = (g8, r8, b8)
+        elif order == NeopixelMatrix.ORDER_BGR:
+            rgb = (b8, g8, r8)
+        elif order == NeopixelMatrix.ORDER_BRG:
+            rgb = (b8, r8, g8)
+        elif order == NeopixelMatrix.ORDER_RBG:
+            rgb = (r8, b8, g8)
+        elif order == NeopixelMatrix.ORDER_GBR:
+            rgb = (g8, b8, r8)
+        else:
+            raise ValueError('Invalid order: {}'.format(order))
+
+        # 写入缓存
+        NeopixelMatrix.COLOR_CACHE[cache_key] = rgb
+
+        return rgb
 
     @micropython.native
     def show(self, x1=0, y1=0, x2=None, y2=None):
@@ -319,6 +355,84 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             elif ystep < 0:
                 # 向上滚动，清除底部残留
                 self.hline(0, self.height - 1, self.width, clear_color)
+
+    @micropython.native
+    def show_rgb565_image(self, image_data, offset_x=0, offset_y=0):
+        """
+        显示RGB565格式的JSON图片
+        参数:
+            image_data: 包含RGB565数据的JSON字符串或字典
+            offset_x: X轴偏移(像素)
+            offset_y: Y轴偏移(像素)
+        """
+        try:
+            # 解析JSON数据
+            if isinstance(image_data, str):
+                image_data = json.loads(image_data)
+
+            # 验证数据格式
+            self._validate_rgb565_image(image_data)
+
+            # 渲染图片
+            self._draw_rgb565_data(
+                image_data['pixels'],
+                image_data.get('width', self.width),
+                offset_x,
+                offset_y
+            )
+        except Exception as e:
+            print("Error: {}".format(e))
+
+    @micropython.native
+    def _validate_rgb565_image(self, data):
+        """
+        验证RGB565图像数据结构
+        """
+        required = ['pixels']
+        if not all(key in data for key in required):
+            raise ValueError('lack required keys: {}'.format(required))
+
+        if not isinstance(data['pixels'], list):
+            raise ValueError('pixels must be list')
+
+        if 'width' in data and data['width'] <= 0:
+            raise ValueError('width must be positive integer')
+
+        for color in data['pixels']:
+            if not 0 <= color <= 0xFFFF:
+                raise ValueError('color must be 0-65535')
+
+    @micropython.native
+    def _draw_rgb565_data(self, pixels, img_width, offset_x, offset_y):
+        """
+        渲染RGB565像素数据
+        参数:
+            pixels: RGB565值数组
+            img_width: 原图宽度
+            offset_x: X偏移
+            offset_y: Y偏移
+        """
+        for i, color in enumerate(pixels):
+            x = i % img_width + offset_x
+            y = i // img_width + offset_y
+
+            if 0 <= x < self.width and 0 <= y < self.height:
+                self.pixel(x, y, color)
+
+    @micropython.native
+    def load_rgb565_image(self, filename, offset_x=0, offset_y=0):
+        """
+        从JSON文件加载RGB565格式图片
+        参数:
+            filename: JSON文件路径
+            offset_x: X轴偏移
+            offset_y: Y轴偏移
+        """
+        try:
+            with open(filename, 'r') as f:
+                self.show_rgb565_image(f.read(), offset_x, offset_y)
+        except OSError as e:
+            print("Error: {}".format(e))
 
 # ======================================== 初始化配置 ==========================================
 
