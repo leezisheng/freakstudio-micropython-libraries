@@ -52,6 +52,10 @@ class NeopixelMatrix(framebuf.FrameBuffer):
     # 缓存颜色转换结果，加速重复色值的处理
     COLOR_CACHE = {}
 
+    # Gamma色准校正表
+    # Gamma=2.8
+    _GAMMA_TABLE = [int(pow(i/255.0, 3) * 255) for i in range(256)]
+
     # 图片JSON格式规范:
     # {
     #     "pixels": [    # 必需 - RGB565像素数组，每个值范围0-65535
@@ -149,6 +153,29 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         self._init_color_cache()
 
     @micropython.native
+    def apply_brightness_gamma_balance(self, r, g, b, brightness=None, r_balance=1.0, g_balance=1.0, b_balance=1.0):
+        """
+        应用亮度调节、Gamma校正和三色调整
+        """
+        if brightness is None:
+            brightness = self._brightness
+
+        if not 0 <= brightness <= 1:
+            raise ValueError("Brightness must be between 0 and 1")
+
+        # 应用Gamma校正
+        r = NeopixelMatrix._GAMMA_TABLE[r]
+        g = NeopixelMatrix._GAMMA_TABLE[g]
+        b = NeopixelMatrix._GAMMA_TABLE[b]
+
+        # 应用亮度和三色调整
+        r = int(r * brightness * r_balance)
+        g = int(g * brightness * g_balance)
+        b = int(b * brightness * b_balance)
+
+        return r, g, b
+
+    @micropython.native
     def _pos2index(self, x, y):
         """
         处理不同矩阵排列方式
@@ -175,7 +202,7 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             return y * self.width + (x if y % 2 == 0 else self.width - 1 - x)
 
     @micropython.native
-    def rgb565_to_rgb888(self, val, brightness=None, order=None):
+    def rgb565_to_rgb888(self, val, brightness=None, order=None, r_balance=1.0, g_balance=1.0, b_balance=1.0):
         """
         将 RGB565 颜色转换为 RGB888（三元组），适配 WS2812。
         使用缓存加速重复转换。
@@ -189,20 +216,18 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         if not 0 <= brightness <= 1:
             raise ValueError("Brightness must be between 0 and 1")
 
-        # 检查缓存
-        cache_key = (val, brightness, order)
-        if cache_key in NeopixelMatrix.COLOR_CACHE:
-            return NeopixelMatrix.COLOR_CACHE[cache_key]
-
         # 提取 RGB565 颜色分量
         r = (val >> 11) & 0x1F
         g = (val >> 5) & 0x3F
         b = val & 0x1F
 
-        # 转换为 8bit 并应用亮度
-        r8 = int(((r * 527 + 23) >> 6) * brightness)
-        g8 = int(((g * 259 + 33) >> 6) * brightness)
-        b8 = int(((b * 527 + 23) >> 6) * brightness)
+        # 转换为 8bit
+        r8 = (r << 3) | (r >> 2)
+        g8 = (g << 2) | (g >> 4)
+        b8 = (b << 3) | (b >> 2)
+
+        # 调用apply_brightness_gamma_balance进行亮度、Gamma校正和三色调整
+        r8, g8, b8 = self.apply_brightness_gamma_balance(r8, g8, b8, brightness, r_balance, g_balance, b_balance)
 
         # 根据顺序组合
         if order == NeopixelMatrix.ORDER_RGB:
@@ -221,7 +246,7 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             raise ValueError('Invalid order: {}'.format(order))
 
         # 写入缓存
-        NeopixelMatrix.COLOR_CACHE[cache_key] = rgb
+        NeopixelMatrix.COLOR_CACHE[(val, brightness, order)] = rgb
 
         return rgb
 
