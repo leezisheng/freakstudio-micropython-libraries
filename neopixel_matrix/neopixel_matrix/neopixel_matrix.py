@@ -21,6 +21,14 @@ import json
 
 # ======================================== 全局变量 ============================================
 
+# Gamma校正系数
+# 红通道：线性，无校正
+GAMMA_RED = 1.0
+# 绿通道：线性，无校正
+GAMMA_GREEN = 1.0
+# 蓝通道：线性，无校正
+GAMMA_BLUE = 1.0
+
 # ======================================== 功能函数 ============================================
 
 # ======================================== 自定义类 ============================================
@@ -49,29 +57,31 @@ class NeopixelMatrix(framebuf.FrameBuffer):
     LAYOUT_ROW = 'row'
     LAYOUT_SNAKE = 'snake'
 
-    # 缓存颜色转换结果，加速重复色值的处理
-    COLOR_CACHE = {}
+    # Gamma色准校正计算公式
 
-    # Gamma色准校正表
-    # Gamma=2.8
-    _GAMMA_TABLE = [int(pow(i/255.0, 3) * 255) for i in range(256)]
+    _GAMMA_TABLE_R = [round(255 * ((i / 255) ** (1 / GAMMA_RED))) for i in range(256)]
+    _GAMMA_TABLE_G = [round(255 * ((i / 255) ** (1 / GAMMA_GREEN))) for i in range(256)]
+    _GAMMA_TABLE_B = [round(255 * ((i / 255) ** (1 / GAMMA_BLUE))) for i in range(256)]
 
-    # 图片JSON格式规范:
+    # 图片JSON格式规范 (RGB565像素格式)
+    # 说明：该JSON用于存储RGB565格式的像素图像数据，可被图像加载方法解析渲染
     # {
-    #     "pixels": [    # 必需 - RGB565像素数组，每个值范围0-65535
-    #         0xF800,    # 红色 (R=31, G=0, B=0)
-    #         0x07E0,    # 绿色 (R=0, G=63, B=0)
-    #         0x001F     # 蓝色 (R=0, G=0, B=31)
+    #     "pixels": [    # 必需字段 - RGB565像素数组，每个值的数值范围为0-65535（对应十六进制0x0000-0xFFFF）
+    #                    # 像素值**必须使用十进制整数**表示（如63488），禁止使用十六进制格式（如0xF800）
+    #                    # 排版建议：每个像素值单独占一行，提升JSON文件的可读性并避免解析错误
+    #         63488,     # 示例：纯红色（对应RGB565编码：R=31, G=0, B=0，十六进制0xF800转换为十进制63488）
+    #         2016,      # 示例：纯绿色（对应RGB565编码：R=0, G=63, B=0，十六进制0x07E0转换为十进制2016）
+    #         31         # 示例：纯蓝色（对应RGB565编码：R=0, G=0, B=31，十六进制0x001F转换为十进制31）
     #     ],
-    #     "width": 128,   # 可选 - 图片宽度(像素)，默认使用显示器宽度
-    #                     # 注: len(pixels)必须能被width整除
-    #     # 以下为可选元数据(不影响渲染):
-    #     "height": 64,   # 自动计算: len(pixels)/width
-    #     "description": "示例图片",
-    #     "version": 1.0
+    #     "width": 128,   # 可选字段 - 图片宽度（单位：像素），默认使用显示器宽度
+    #                     # 强制约束：像素数组长度len(pixels)必须能被width整除，否则会导致解析失败
+    #     # 以下为可选元数据字段（仅用于描述信息，不影响图像渲染逻辑）
+    #     "height": 64,   # 可选字段 - 图片高度（单位：像素），可通过公式自动计算：height = len(pixels) / width
+    #     "description": "Sample image", # 可选字段 - 图片描述信息，建议使用英文表述
+    #     "version": 1.0  # 可选字段 - 格式版本号，用于区分不同版本的规范定义
     # }
 
-    def __init__(self, width, height, pin, layout=LAYOUT_ROW, brightness=0.2, order=ORDER_BRG,
+    def __init__(self, width, height, pin, layout=LAYOUT_ROW, brightness=1, order=ORDER_RGB,
                  flip_h=False, flip_v=False, rotate=0):
         # 检查参数是否合法
         if width < 1 or height < 1:
@@ -117,26 +127,8 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         # 初始化 framebuf.FrameBuffer，使用 RGB565 模式
         super().__init__(self.buffer, width, height, framebuf.RGB565)
 
-        # 初始化亮度并缓存常用颜色
+        # 初始化亮度
         self._brightness = brightness
-        self._init_color_cache()
-
-    def _init_color_cache(self):
-        """根据当前亮度初始化常用颜色缓存"""
-        NeopixelMatrix.COLOR_CACHE.clear()
-        common_colors = [
-            NeopixelMatrix.COLOR_BLACK,
-            NeopixelMatrix.COLOR_WHITE,
-            NeopixelMatrix.COLOR_RED,
-            NeopixelMatrix.COLOR_GREEN,
-            NeopixelMatrix.COLOR_BLUE,
-            NeopixelMatrix.COLOR_YELLOW,
-            NeopixelMatrix.COLOR_CYAN,
-            NeopixelMatrix.COLOR_MAGENTA
-        ]
-        for color in common_colors:
-            # 计算并缓存
-            self.rgb565_to_rgb888(color)
 
     @property
     def brightness(self):
@@ -145,12 +137,10 @@ class NeopixelMatrix(framebuf.FrameBuffer):
 
     @brightness.setter
     def brightness(self, value):
-        """设置亮度，并清空缓存"""
+        """设置亮度"""
         if not 0 <= value <= 1:
             raise ValueError("Brightness must be between 0 and 1")
         self._brightness = value
-        # 清空并重新初始化缓存
-        self._init_color_cache()
 
     @micropython.native
     def apply_brightness_gamma_balance(self, r, g, b, brightness=None, r_balance=1.0, g_balance=1.0, b_balance=1.0):
@@ -164,9 +154,9 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             raise ValueError("Brightness must be between 0 and 1")
 
         # 应用Gamma校正
-        r = NeopixelMatrix._GAMMA_TABLE[r]
-        g = NeopixelMatrix._GAMMA_TABLE[g]
-        b = NeopixelMatrix._GAMMA_TABLE[b]
+        r = NeopixelMatrix._GAMMA_TABLE_R[r]
+        g = NeopixelMatrix._GAMMA_TABLE_G[g]
+        b = NeopixelMatrix._GAMMA_TABLE_B[b]
 
         # 应用亮度和三色调整
         r = int(r * brightness * r_balance)
@@ -205,7 +195,6 @@ class NeopixelMatrix(framebuf.FrameBuffer):
     def rgb565_to_rgb888(self, val, brightness=None, order=None, r_balance=1.0, g_balance=1.0, b_balance=1.0):
         """
         将 RGB565 颜色转换为 RGB888（三元组），适配 WS2812。
-        使用缓存加速重复转换。
         """
         if brightness is None:
             brightness = self._brightness
@@ -245,9 +234,6 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         else:
             raise ValueError('Invalid order: {}'.format(order))
 
-        # 写入缓存
-        NeopixelMatrix.COLOR_CACHE[(val, brightness, order)] = rgb
-
         return rgb
 
     @micropython.native
@@ -280,8 +266,8 @@ class NeopixelMatrix(framebuf.FrameBuffer):
                 idx = self._pos2index(x, y)
                 # 每个像素占 2 字节，计算在 buffer 中的偏移地址
                 addr = (y * self.width + x) * 2
-                # 从 FrameBuffer 中读取 RGB565 值（高字节在前）
-                val = (self.buffer[addr] << 8) | self.buffer[addr + 1]
+                # 从 FrameBuffer 中读取 RGB565 值， 注意，FrameBuffer是小端序
+                val = (self.buffer[addr + 1] << 8) | self.buffer[addr]
                 # 转换为 RGB888 后赋值给 WS2812
                 self.np[idx] = self.rgb565_to_rgb888(val, self.brightness, self.order)
 
@@ -297,6 +283,8 @@ class NeopixelMatrix(framebuf.FrameBuffer):
             ystep: 垂直滚动步数(正数向下，负数向上)
             clear_color: 清除残留区域使用的颜色(默认COLOR_BLACK)
             wrap: True=循环滚动 False=普通滚动(默认)
+        需要注意：
+            不允许同时设置水平和垂直滚动步数（xstep和ystep不能同时非零）
         """
         # 如果没有指定清除颜色，使用默认黑色
         if clear_color is None:
@@ -313,6 +301,10 @@ class NeopixelMatrix(framebuf.FrameBuffer):
         # 检查循环滚动设置参数是否合法
         if not isinstance(wrap, bool):
             raise ValueError('wrap must be bool')
+
+        # 只能选择水平或垂直一个方向滚动
+        if xstep != 0 and ystep != 0:
+            raise ValueError('Cannot set xstep and ystep at the same time (only one direction allowed)')
 
         if wrap:
             # 循环滚动模式 - 保存原始缓冲区

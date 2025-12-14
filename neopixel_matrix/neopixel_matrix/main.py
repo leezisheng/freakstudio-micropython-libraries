@@ -235,7 +235,7 @@ def scroll_text(matrix, text, direction='left', text_color=NeopixelMatrix.COLOR_
 
 # ======================================== 初始化配置 ==========================================
 
-matrix = NeopixelMatrix(16, 16, Pin(6), layout=NeopixelMatrix.LAYOUT_SNAKE, brightness=0.1, order=NeopixelMatrix.ORDER_BRG, flip_h=True)
+matrix = NeopixelMatrix(16, 16, Pin(6), layout=NeopixelMatrix.LAYOUT_SNAKE, brightness=0.1, order=NeopixelMatrix.ORDER_RGB, flip_h=True)
 matrix.fill(0)
 matrix.show()
 
